@@ -13,4 +13,8 @@
 
     <name>Fashion Store</name>
 
+    <build>
+        <finalName>fashion-store</finalName>
+    </build>
+
 </project>

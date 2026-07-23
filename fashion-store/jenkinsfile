@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "fashion-store"
+        DOCKER_TAG   = "${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        DOCKERHUB_REPO = "your-dockerhub-username/fashion-store"
+    }
+
+    tools {
+        maven 'Maven-3.9'
+        jdk 'JDK-17'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Kusuma123-19/web_fashion_store.git'
+            }
+        }
+
+        stage('Build WAR') {
+            steps {
+                bat 'mvn clean package'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                bat "docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% ."
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                bat "docker login -u %DOCKERHUB_CREDENTIALS_USR% -p %DOCKERHUB_CREDENTIALS_PSW%"
+                bat "docker tag %DOCKER_IMAGE%:%DOCKER_TAG% %DOCKERHUB_REPO%:%DOCKER_TAG%"
+                bat "docker push %DOCKERHUB_REPO%:%DOCKER_TAG%"
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                bat "docker rm -f fashion-store-app || exit 0"
+                bat "docker run -d --name fashion-store-app -p 8084:8080 %DOCKER_IMAGE%:%DOCKER_TAG%"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs above.'
+        }
+    }
+}
