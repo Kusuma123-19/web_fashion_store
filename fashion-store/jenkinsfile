@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = "fashion-store"
         DOCKER_TAG   = "${BUILD_NUMBER}"
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
-        DOCKERHUB_REPO = "your-dockerhub-username/fashion-store"
+        DOCKERHUB_REPO = "kusumacr21/fashion-store"
     }
 
     tools {
