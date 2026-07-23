@@ -24,35 +24,39 @@ pipeline {
 
         stage('Build WAR') {
             steps {
-                bat 'mvn clean package'
+                dir('fashion-store') {
+                    sh 'mvn clean package'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat "docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% ."
+                dir('fashion-store') {
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                }
             }
         }
 
         stage('Push to DockerHub') {
             steps {
-                bat "docker login -u %DOCKERHUB_CREDENTIALS_USR% -p %DOCKERHUB_CREDENTIALS_PSW%"
-                bat "docker tag %DOCKER_IMAGE%:%DOCKER_TAG% %DOCKERHUB_REPO%:%DOCKER_TAG%"
-                bat "docker push %DOCKERHUB_REPO%:%DOCKER_TAG%"
+                sh "docker login -u ${DOCKERHUB_CREDENTIALS_USR} -p ${DOCKERHUB_CREDENTIALS_PSW}"
+                sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKERHUB_REPO}:${DOCKER_TAG}"
+                sh "docker push ${DOCKERHUB_REPO}:${DOCKER_TAG}"
             }
         }
 
         stage('Deploy Container') {
             steps {
-                bat "docker rm -f fashion-store-app || exit 0"
-                bat "docker run -d --name fashion-store-app -p 8084:8080 %DOCKER_IMAGE%:%DOCKER_TAG%"
+                sh "docker rm -f fashion-store-app || true"
+                sh "docker run -d --name fashion-store-app -p 8084:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}"
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline completed successsfully!'
+            echo 'Pipeline completed successfully!'
         }
         failure {
             echo 'Pipeline failed. Check logs above.'
